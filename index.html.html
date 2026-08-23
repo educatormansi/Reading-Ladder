@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Ladder — Intervention Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF7F1;
+  --paper-raised:#FFFFFF;
+  --ink:#20242B;
+  --ink-soft:#5C6370;
+  --line:#E4DFD4;
+  --teal:#2A6F63;
+  --teal-deep:#1E5048;
+  --teal-wash:#E7F1EE;
+  --amber:#C97A3B;
+  --amber-wash:#FBEEE1;
+  --red:#B3402E;
+  --red-wash:#F8E7E3;
+  --l1:#B54834; --l2:#C97A3B; --l3:#CBA43C; --l4:#9FA23E; --l5:#6FA05A; --l6:#3D8F6E; --l7:#2A6F63;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(32,36,43,0.06), 0 6px 20px rgba(32,36,43,0.05);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:14.5px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;margin:0;letter-spacing:-0.01em;}
+::selection{background:var(--teal-wash);}
+button{font-family:inherit;}
+.app{max-width:1240px;margin:0 auto;padding:0 22px 60px;}
+
+/* ---------- Header ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;
+  max-width:1240px;margin:0 auto;
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer;background:none;border:none;padding:0;}
+.brand-mark{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(160deg,var(--l1),var(--l4) 50%,var(--l7));
+  position:relative;flex:none;
+}
+.brand-mark::after{
+  content:"";position:absolute;inset:6px;border-radius:4px;background:var(--paper);
+  clip-path:polygon(0 100%, 100% 100%, 100% 60%, 0 20%);
+}
+.brand-text{text-align:left;}
+.brand-text h1{font-size:18px;color:var(--ink);}
+.brand-text span{font-size:11px;color:var(--ink-soft);letter-spacing:.04em;text-transform:uppercase;}
+nav.mainnav{display:flex;gap:4px;flex-wrap:wrap;}
+nav.mainnav button{
+  border:1px solid transparent;background:none;color:var(--ink-soft);
+  padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;
+  transition:background .12s,color .12s;
+}
+nav.mainnav button:hover{background:var(--teal-wash);color:var(--teal-deep);}
+nav.mainnav button.active{background:var(--teal);color:#fff;}
+
+/* ---------- Layout helpers ---------- */
+.view{display:none;padding-top:26px;}
+.view.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+.viewhead{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.viewhead h2{font-size:24px;}
+.viewhead p{color:var(--ink-soft);font-size:13px;margin-top:3px;}
+.card{background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.spacer{flex:1;}
+input[type=text],input[type=search],select,textarea{
+  font-family:inherit;font-size:13.5px;padding:8px 11px;border:1px solid var(--line);
+  border-radius:7px;background:#fff;color:var(--ink);outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-wash);}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--teal);color:#fff;border:none;padding:9px 16px;border-radius:7px;
+  font-weight:600;font-size:13.5px;cursor:pointer;transition:background .12s,transform .05s;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--teal-deep);}
+.btn:active{transform:scale(.98);}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.btn.secondary:hover{background:var(--teal-wash);border-color:var(--teal);}
+.btn.ghost{background:none;color:var(--ink-soft);padding:6px 10px;}
+.btn.ghost:hover{color:var(--teal-deep);background:var(--teal-wash);}
+.btn.danger{background:var(--red);}
+.btn.danger:hover{background:#8f2f21;}
+.btn.small{padding:6px 11px;font-size:12.5px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+
+/* ---------- Table ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff;}
+table{border-collapse:collapse;width:100%;font-size:13px;}
+thead th{
+  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);
+  background:#F4F0E7;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;
+}
+tbody td{padding:9px 12px;border-bottom:1px solid #EFEBE0;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FCFAF5;cursor:pointer;}
+tbody tr.flagged{background:var(--red-wash);}
+tbody tr.flagged:hover{background:#f4d9d2;}
+.muted{color:var(--ink-soft);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+/* ---------- Badges ---------- */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11.5px;font-weight:600;white-space:nowrap;}
+.badge.level{color:#fff;}
+.badge.group{background:var(--teal-wash);color:var(--teal-deep);}
+.badge.priority-high{background:var(--red-wash);color:var(--red);}
+.badge.priority-medium{background:var(--amber-wash);color:#8a5220;}
+.badge.priority-low{background:#EFF3E2;color:#556B2F;}
+.badge.priority-practice{background:var(--teal-wash);color:var(--teal-deep);}
+.badge.status-exceeded{background:#DDEFE0;color:#1F6B33;}
+.badge.status-achieved{background:var(--teal-wash);color:var(--teal-deep);}
+.badge.status-partial{background:var(--amber-wash);color:#8a5220;}
+.badge.status-nogrowth{background:#EFEBE0;color:var(--ink-soft);}
+.badge.status-declined{background:var(--red-wash);color:var(--red);}
+.badge.status-pending{background:#F1EEE6;color:var(--ink-soft);border:1px dashed var(--line);}
+.badge.flag{background:var(--red-wash);color:var(--red);}
+.growth-pos{color:#1F6B33;font-weight:700;}
+.growth-neg{color:var(--red);font-weight:700;}
+.growth-zero{color:var(--ink-soft);font-weight:700;}
+
+/* ---------- Home ---------- */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:26px;}
+.stat-card{padding:18px 18px 16px;}
+.stat-card .num{font-family:'Fraunces',serif;font-size:32px;font-weight:600;}
+.stat-card .label{font-size:12px;color:var(--ink-soft);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.nav-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.nav-card{padding:20px;text-align:left;cursor:pointer;transition:border-color .12s, transform .1s;border:1px solid var(--line);}
+.nav-card:hover{border-color:var(--teal);transform:translateY(-2px);}
+.nav-card .tag{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-deep);font-weight:700;margin-bottom:8px;display:block;}
+.nav-card h3{font-size:17px;margin-bottom:6px;}
+.nav-card p{font-size:12.5px;color:var(--ink-soft);}
+
+/* ---------- Forms / Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(32,28,20,0.45);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:40px 16px;overflow-y:auto;z-index:100;
+}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--paper-raised);border-radius:14px;max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal.wide{max-width:900px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
+.modal-head h3{font-size:18px;}
+.modal-body{padding:20px 22px;max-height:70vh;overflow-y:auto;}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;}
+.x-close{background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:4px;}
+.x-close:hover{color:var(--ink);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+.field input,.field select,.field textarea{width:100%;}
+.field.span2{grid-column:1/-1;}
+.readonly-box{
+  background:#F4F0E7;border:1px solid var(--line);border-radius:7px;padding:9px 11px;font-size:13px;color:var(--ink-soft);
+}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+.tabs-mini{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+.tabs-mini button{background:none;border:none;padding:8px 4px;margin-right:14px;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;}
+.tabs-mini button.active{color:var(--teal-deep);border-color:var(--teal);}
+
+/* ---------- Weekly chip nav ---------- */
+.week-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.week-tabs button{
+  border:1px solid var(--line);background:#fff;color:var(--ink-soft);padding:7px 13px;border-radius:100px;
+  font-size:13px;font-weight:600;cursor:pointer;
+}
+.week-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+/* ---------- Weekly grid ---------- */
+#weeklyGridTable td{padding:6px 8px;}
+.grid-cell{display:flex;align-items:center;gap:4px;}
+select.weekly-grid-select{
+  font-size:12px;padding:6px 7px;border-radius:6px;max-width:190px;min-width:150px;
+  background:#fff;border:1px solid var(--line);color:var(--ink);
+}
+select.weekly-grid-select.has-value{border-color:var(--teal);background:var(--teal-wash);}
+.note-btn{
+  border:none;background:none;font-size:14px;cursor:pointer;padding:3px 5px;border-radius:5px;flex:none;line-height:1;
+}
+.note-btn:hover{background:var(--teal-wash);}
+.note-btn.has-note{filter:none;}
+
+/* sortable table headers */
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable:hover{color:var(--teal-deep);}
+th.sortable .arrow{font-size:10px;margin-left:3px;opacity:.6;}
+
+/* ---------- Framework editable ---------- */
+textarea.editcell{width:100%;min-height:52px;resize:vertical;border:1px solid transparent;background:transparent;padding:6px;font-size:12.8px;}
+textarea.editcell:hover{border-color:var(--line);}
+textarea.editcell:focus{border-color:var(--teal);background:#fff;}
+select.editcell{border:1px solid transparent;background:transparent;font-size:12.8px;padding:6px;width:100%;}
+select.editcell:hover{border-color:var(--line);}
+.fw-level-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+
+/* ---------- Charts ---------- */
+.chart-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px;}
+@media(max-width:820px){.chart-row{grid-template-columns:1fr;}}
+.chart-card{padding:18px;}
+.chart-card h4{font-size:14px;margin-bottom:14px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px;}
+.bar-row .lbl{width:150px;flex:none;color:var(--ink-soft);text-align:right;}
+.bar-track{flex:1;background:#F1EDE2;border-radius:5px;height:14px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;}
+.bar-row .val{width:26px;flex:none;font-weight:700;}
+
+/* ---------- Profile drawer ---------- */
+.profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.pf-item{background:#F4F0E7;border-radius:8px;padding:10px 12px;}
+.pf-item .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;margin-bottom:4px;}
+.pf-item .v{font-size:13.5px;font-weight:600;}
+.pf-item.goal{grid-column:1/-1;background:var(--teal-wash);}
+.pf-item.goal .v{font-weight:500;font-size:13px;line-height:1.5;}
+
+/* ---------- Import ---------- */
+.dropzone{
+  border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--ink-soft);
+  font-size:13px;cursor:pointer;transition:border-color .12s,background .12s;
+}
+.dropzone:hover{border-color:var(--teal);background:var(--teal-wash);}
+.import-summary{display:flex;gap:16px;margin:14px 0;flex-wrap:wrap;}
+.import-summary .isum{font-size:13px;}
+.import-summary .isum b{font-family:'Fraunces',serif;font-size:20px;display:block;}
+
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:13.5px;font-weight:600;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:200;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+.empty{padding:40px 20px;text-align:center;color:var(--ink-soft);}
+.empty h4{color:var(--ink);margin-bottom:6px;}
+.small-note{font-size:12px;color:var(--ink-soft);margin-top:10px;}
+.banner-warn{
+  background:var(--amber-wash);border:1px solid #E0B583;color:#8a5220;border-radius:8px;
+  padding:11px 14px;font-size:13px;font-weight:600;margin-bottom:20px;
+}
+.banner-warn button{background:none;border:none;color:#8a5220;font-weight:700;cursor:pointer;padding:0;font-size:13px;}
+footer.app-foot{text-align:center;color:var(--ink-soft);font-size:11.5px;padding:30px 0 10px;}
+@media(max-width:640px){
+  .topbar{flex-direction:column;align-items:flex-start;gap:12px;}
+  nav.mainnav{width:100%;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="brand" id="btnHome" title="Home">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <h1>Reading Ladder</h1>
+      <span>Intervention Tracker</span>
+    </div>
+  </button>
+  <nav class="mainnav">
+    <button data-view="students">Students</button>
+    <button data-view="weekly">Weekly Progress</button>
+    <button data-view="analysis">Analysis</button>
+    <button data-view="framework">Reading Framework</button>
+    <button id="btnSettings" title="Backend settings">⚙ Settings</button>
+  </nav>
+</div>
+
+<div class="app">
+
+  <!-- HOME -->
+  <section class="view" id="view-home">
+    <div class="viewhead">
+      <div>
+        <h2>Good to see you.</h2>
+        <p>A quick read on where the school stands today.</p>
+      </div>
+    </div>
+    <div class="banner-warn" id="backendBanner" style="display:none;"></div>
+    <div class="stat-grid" id="homeStats"></div>
+    <div class="card" style="padding:20px 22px;margin-bottom:26px;" id="howToUse">
+      <h3 style="font-size:16px;margin-bottom:12px;">How to use this app</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;font-size:13px;color:var(--ink-soft);">
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">1. Check the roster</strong>Open <b>Students</b>. Your existing students are already loaded. If any are missing, use <b>Import students</b> to paste or upload the rest — duplicates and bad values are flagged automatically, nothing else is touched.</div>
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">2. Log weekly progress</strong>Open <b>Weekly Progress</b>, click <b>Log weekly progress</b>, search the student's name, pick the week and current level. Saving again for the same student + week edits that record instead of duplicating it.</div>
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">3. Enter the endline</strong>When the intervention cycle ends, open a student's profile from the Students table and set their <b>Endline Reading Level</b>. Growth and Goal Status calculate themselves.</div>
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">4. Read the dashboards</strong><b>Analysis</b> is read‑only and always current — school-wide numbers, charts, and a grade‑by‑grade table. Nothing there is typed in by hand.</div>
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">5. Adjust the framework if needed</strong><b>Reading Framework</b> holds the goals, groups and priorities every calculation is based on. Edit a cell and every student and dashboard updates immediately.</div>
+        <div><strong style="color:var(--ink);display:block;margin-bottom:3px;">6. Find a student fast</strong>In <b>Students</b>, search by name or filter by grade/group, then click any row to open their full profile and weekly history.</div>
+      </div>
+    </div>
+    <div class="nav-cards">
+      <button class="card nav-card" data-goto="students">
+        <span class="tag">01 · Roster</span>
+        <h3>Students</h3>
+        <p>View, search, add, and import the student roster. Baseline level drives everything downstream.</p>
+      </button>
+      <button class="card nav-card" data-goto="weekly">
+        <span class="tag">02 · Progress</span>
+        <h3>Weekly Progress</h3>
+        <p>Log a student's reading level and remarks each week — six weeks per intervention cycle.</p>
+      </button>
+      <button class="card nav-card" data-goto="analysis">
+        <span class="tag">03 · Insight</span>
+        <h3>Analysis</h3>
+        <p>Live, read-only school-wide and grade-wise dashboards. Nothing here is typed in by hand.</p>
+      </button>
+      <button class="card nav-card" data-goto="framework">
+        <span class="tag">04 · Source of truth</span>
+        <h3>Reading Framework</h3>
+        <p>The seven reading levels and four groups that drive every automatic calculation in the app.</p>
+      </button>
+    </div>
+  </section>
+
+  <!-- STUDENTS -->
+  <section class="view" id="view-students">
+    <div class="viewhead">
+      <div>
+        <h2>Students</h2>
+        <p>Student Master — baseline in, everything else calculates itself.</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn secondary" id="btnImport">Import students</button>
+        <button class="btn" id="btnAddStudent">+ Add student</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="studentSearch" placeholder="Search by student name…" style="min-width:220px;">
+      <select id="filterGrade"><option value="">All grades</option></select>
+      <select id="filterGroup"><option value="">All groups</option></select>
+      <select id="filterBaseline"><option value="">All baseline levels</option></select>
+      <select id="filterStatus"><option value="">All goal statuses</option></select>
+      <select id="filterIntervention"><option value="">Intervention: all</option><option value="YES">Intervention: YES</option><option value="NO">Intervention: NO</option></select>
+      <div class="spacer"></div>
+      <span class="muted" id="studentCountLabel"></span>
+    </div>
+    <div class="tablewrap">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="grade">Grade<span class="arrow"></span></th>
+            <th class="sortable" data-sort="name">Student<span class="arrow"></span></th>
+            <th class="sortable" data-sort="baseline">Baseline<span class="arrow"></span></th>
+            <th class="sortable" data-sort="group">Reading Group<span class="arrow"></span></th>
+            <th class="sortable" data-sort="currentLevel">Current<span class="arrow"></span></th>
+            <th class="sortable" data-sort="endline">Endline<span class="arrow"></span></th>
+            <th class="sortable" data-sort="growthNum">Growth<span class="arrow"></span></th>
+            <th class="sortable" data-sort="goalStatus">Goal Status<span class="arrow"></span></th>
+            <th class="sortable" data-sort="interventionRequired">Intervention<span class="arrow"></span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="studentsTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- WEEKLY -->
+  <section class="view" id="view-weekly">
+    <div class="viewhead">
+      <div>
+        <h2>Weekly Progress</h2>
+        <p>One row per student. Pick the status for each week directly from the dropdown — options are the student's group goal broken into steps.</p>
+      </div>
+      <button class="btn" id="btnAddWeekly">+ Add note for a week</button>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="weeklySearch" placeholder="Search by student name…" style="min-width:220px;">
+      <select id="weeklyGradeFilter"><option value="">All grades</option></select>
+      <select id="weeklyGroupFilter"><option value="">All groups</option></select>
+      <div class="spacer"></div>
+      <span class="muted" id="weeklyCountLabel"></span>
+    </div>
+    <div class="tablewrap">
+      <table id="weeklyGridTable">
+        <thead>
+          <tr>
+            <th>Grade</th><th>Student</th>
+            <th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Week 5</th><th>Week 6</th>
+          </tr>
+        </thead>
+        <tbody id="weeklyTbody"></tbody>
+      </table>
+    </div>
+    <p class="small-note">Each dropdown is grouped: the student's own group goal steps appear first, followed by all seven reading levels in case you need to record something different. The ✏️ icon lets you add a progress note or teacher remark for that week.</p>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section class="view" id="view-analysis">
+    <div class="viewhead">
+      <div>
+        <h2>Analysis</h2>
+        <p>Read-only. Recalculated live from Student Master, Weekly Progress and the Reading Framework.</p>
+      </div>
+    </div>
+    <div class="stat-grid" id="analysisStats"></div>
+    <div class="chart-row">
+      <div class="card chart-card">
+        <h4>Reading level distribution (baseline)</h4>
+        <div id="levelChart"></div>
+      </div>
+      <div class="card chart-card">
+        <h4>Goal status</h4>
+        <div id="statusChart"></div>
+      </div>
+    </div>
+    <h4 style="margin-bottom:12px;">Grade-wise analysis</h4>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Grade</th><th>Total</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>L5</th><th>L6</th><th>L7</th><th>Intervention</th><th>Improved</th><th>Goal Achieved</th><th>Avg Growth</th></tr>
+        </thead>
+        <tbody id="gradeAnalysisTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FRAMEWORK -->
+  <section class="view" id="view-framework">
+    <div class="viewhead">
+      <div>
+        <h2>Reading Level Framework</h2>
+        <p>The source of truth. Edit any cell — every student record and dashboard updates automatically.</p>
+      </div>
+      <button class="btn secondary small" id="btnResetFramework">Reset to defaults</button>
+    </div>
+    <div class="tablewrap" style="margin-bottom:24px;">
+      <table>
+        <thead>
+          <tr><th style="width:26px;">#</th><th style="width:150px;">Level</th><th>Reading Ability</th><th>Student Can Do</th><th style="width:170px;">Reading Group</th><th style="width:110px;">Priority</th><th style="width:110px;">Intervention Req.</th></tr>
+        </thead>
+        <tbody id="frameworkLevelsTbody"></tbody>
+      </table>
+    </div>
+    <h4 style="margin-bottom:12px;">Reading groups</h4>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:220px;">Reading Group</th><th style="width:110px;">Levels Covered</th><th>Main Goal</th><th>Specific Student Goal by Endline</th></tr></thead>
+        <tbody id="frameworkGroupsTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="app-foot">Reading Ladder — one baseline, everything downstream calculates itself.</footer>
+</div>
+
+<!-- Student Add/Edit Modal -->
+<div class="modal-overlay" id="modalStudent">
+  <div class="modal">
+    <div class="modal-head"><h3 id="studentModalTitle">Add student</h3><button class="x-close" data-close="modalStudent">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Grade</label><select id="sfGrade"></select></div>
+        <div class="field span2"><label>Student name</label><input type="text" id="sfName" placeholder="Full name"></div>
+        <div class="field"><label>Baseline reading level</label><select id="sfBaseline"></select></div>
+        <div class="field"><label>Endline reading level <span class="muted">(optional)</span></label><select id="sfEndline"></select></div>
+      </div>
+      <p class="hint" id="studentFormHint" style="margin-top:12px;"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="btnDeleteStudent" style="margin-right:auto;display:none;">Delete student</button>
+      <button class="btn secondary" data-close="modalStudent">Cancel</button>
+      <button class="btn" id="btnSaveStudent">Save student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="modalImport">
+  <div class="modal wide">
+    <div class="modal-head"><h3>Import students</h3><button class="x-close" data-close="modalImport">&times;</button></div>
+    <div class="modal-body">
+      <div class="tabs-mini">
+        <button class="active" data-imptab="paste">Paste rows</button>
+        <button data-imptab="file">Upload CSV / TSV</button>
+      </div>
+      <div id="imptab-paste">
+        <p class="hint">Paste rows as <b>Grade, Student Name, Baseline Reading Level</b> — one student per line, separated by tab or comma. A header row is fine and will be skipped automatically.</p>
+        <textarea id="importPasteArea" style="width:100%;min-height:160px;font-family:'JetBrains Mono',monospace;font-size:12.5px;" placeholder="Grade 1, Aaisha, Level 1 – Beginner
+Grade 1, Samarpreet singh, Level 1 – Beginner"></textarea>
+      </div>
+      <div id="imptab-file" style="display:none;">
+        <div class="dropzone" id="importDropzone">
+          <div>Click to choose a CSV or TSV file<br><span class="muted">Columns: Grade, Student Name, Baseline Reading Level</span></div>
+          <input type="file" id="importFileInput" accept=".csv,.tsv,.txt" style="display:none;">
+        </div>
+        <p class="hint" id="importFileName" style="margin-top:8px;"></p>
+      </div>
+      <div style="margin-top:14px;"><button class="btn secondary small" id="btnPreviewImport">Preview import</button></div>
+      <div id="importPreviewWrap" style="display:none;margin-top:16px;">
+        <div class="import-summary" id="importSummary"></div>
+        <div class="tablewrap" style="max-height:280px;overflow-y:auto;">
+          <table>
+            <thead><tr><th>Grade</th><th>Student Name</th><th>Baseline Reading Level</th><th>Status</th></tr></thead>
+            <tbody id="importPreviewTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" data-close="modalImport">Cancel</button>
+      <button class="btn" id="btnConfirmImport" disabled>Import valid rows</button>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Add/Edit Modal -->
+<div class="modal-overlay" id="modalWeekly">
+  <div class="modal">
+    <div class="modal-head"><h3 id="weeklyModalTitle">Log weekly progress</h3><button class="x-close" data-close="modalWeekly">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-grid full">
+        <div class="field">
+          <label>Student</label>
+          <input type="text" id="wfStudentSearch" placeholder="Type a name to search…" autocomplete="off">
+          <select id="wfStudentSelect" size="5" style="display:none;"></select>
+        </div>
+      </div>
+      <div id="wfContext" class="readonly-box" style="margin:12px 0;display:none;"></div>
+      <div class="form-grid">
+        <div class="field"><label>Week</label><select id="wfWeek"></select></div>
+        <div class="field"><label>Current reading level</label><select id="wfCurrentLevel"></select></div>
+        <div class="field span2"><label>Progress / skill achieved</label><textarea id="wfProgress" rows="2" placeholder="e.g. Blending CVC words with 80% accuracy"></textarea></div>
+        <div class="field span2"><label>Teacher remark</label><textarea id="wfRemark" rows="2" placeholder="Optional notes"></textarea></div>
+      </div>
+      <p class="hint" id="weeklyFormHint" style="margin-top:10px;"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="btnDeleteWeekly" style="margin-right:auto;display:none;">Delete record</button>
+      <button class="btn secondary" data-close="modalWeekly">Cancel</button>
+      <button class="btn" id="btnSaveWeekly">Save record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Student Profile Modal -->
+<div class="modal-overlay" id="modalProfile">
+  <div class="modal wide">
+    <div class="modal-head"><h3 id="profileName">Student profile</h3><button class="x-close" data-close="modalProfile">&times;</button></div>
+    <div class="modal-body">
+      <div class="profile-grid" id="profileGrid"></div>
+      <h4 style="font-size:14px;margin-bottom:10px;">Weekly history</h4>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Week</th><th>Current Level</th><th>Progress / Skill</th><th>Teacher Remark</th></tr></thead>
+          <tbody id="profileWeeklyTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="btnEditFromProfile">Edit student</button>
+      <button class="btn" data-close="modalProfile">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal">
+    <div class="modal-head"><h3>Backend settings</h3><button class="x-close" data-close="modalSettings">&times;</button></div>
+    <div class="modal-body">
+      <p class="hint" style="margin-bottom:14px;">By default this app saves data only in this browser. To share one live roster across multiple teachers/devices, connect a Google Sheet backend — see the included SETUP-GUIDE for a 10-minute walkthrough, then paste the Web App URL below.</p>
+      <div class="field">
+        <label>Google Apps Script Web App URL</label>
+        <input type="text" id="settingsBackendUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <p class="hint" id="settingsStatus" style="margin-top:10px;"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" id="btnClearBackend">Use local browser only</button>
+      <button class="btn secondary" id="btnTestBackend">Test connection</button>
+      <button class="btn" id="btnSaveBackend">Save &amp; reload</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+(function(){
+"use strict";
+
+/* ============================= CONSTANTS ============================= */
+const GRADES = Array.from({length:10},(_,i)=>"Grade "+(i+1));
+const WEEKS = Array.from({length:6},(_,i)=>"Week "+(i+1));
+const LEVEL_NAMES = [
+  "Level 1 – Beginner","Level 2 – Word","Level 3 – Sentence","Level 4 – Paragraph",
+  "Level 5 – Story","Level 6 – Grade Level","Level 7 – Above Grade Level"
+];
+const LEVEL_COLORS = {1:"#B54834",2:"#C97A3B",3:"#CBA43C",4:"#9FA23E",5:"#6FA05A",6:"#3D8F6E",7:"#2A6F63"};
+// target numeric level used only to compute Goal Status (hidden, internal)
+const DEFAULT_TARGETS = {1:3,2:3,3:5,4:5,5:6,6:6,7:7};
+
+function defaultFramework(){
+  return {
+    levels: [
+      {sortOrder:1, level:LEVEL_NAMES[0], readingAbility:"Letter and Sound", studentCanDo:"Recognizes some letters and sounds; struggles to decode words", readingGroup:"Group 1 – Beginning / Emergent", priority:"High", interventionRequired:"YES", target:DEFAULT_TARGETS[1]},
+      {sortOrder:2, level:LEVEL_NAMES[1], readingAbility:"Word Reading", studentCanDo:"Decodes grade-level words but struggles with sentences", readingGroup:"Group 1 – Beginning / Emergent", priority:"High", interventionRequired:"YES", target:DEFAULT_TARGETS[2]},
+      {sortOrder:3, level:LEVEL_NAMES[2], readingAbility:"Sentence Reading", studentCanDo:"Decodes grade-level sentences fluently", readingGroup:"Group 2 – Developing", priority:"Medium", interventionRequired:"YES", target:DEFAULT_TARGETS[3]},
+      {sortOrder:4, level:LEVEL_NAMES[3], readingAbility:"Paragraph Reading", studentCanDo:"Decodes and comprehends a grade-level short paragraph but inaccurately", readingGroup:"Group 2 – Developing", priority:"Medium", interventionRequired:"YES", target:DEFAULT_TARGETS[4]},
+      {sortOrder:5, level:LEVEL_NAMES[4], readingAbility:"Story Reading", studentCanDo:"Decodes and comprehends a grade-level story with fluency", readingGroup:"Group 3 – Approaching Grade Level", priority:"Low", interventionRequired:"YES", target:DEFAULT_TARGETS[5]},
+      {sortOrder:6, level:LEVEL_NAMES[5], readingAbility:"Grade-appropriate", studentCanDo:"Decodes and comprehends grade-level text with appropriate accuracy and fluency", readingGroup:"Group 4 – At Grade Level", priority:"Practice", interventionRequired:"YES", target:DEFAULT_TARGETS[6]},
+      {sortOrder:7, level:LEVEL_NAMES[6], readingAbility:"Advanced", studentCanDo:"Reads beyond grade expectations with strong fluency and comprehension", readingGroup:"Group 4 – Above Grade Level", priority:"Practice Literature", interventionRequired:"YES", target:DEFAULT_TARGETS[7]},
+    ],
+    groups: [
+      {group:"Group 1 – Beginning / Emergent", levelsCovered:"Level 1–2", mainGoal:"Build foundational decoding and word-reading skills", specificGoal:"Students will accurately identify common letters and sounds, blend sounds, read familiar/high-frequency words, and move from letter/sound or word reading → sentence reading."},
+      {group:"Group 2 – Developing", levelsCovered:"Level 3–4", mainGoal:"Build sentence fluency, accuracy and comprehension", specificGoal:"Students will read sentences and short paragraphs with improved accuracy and fluency, answer basic comprehension questions, and move from sentence/paragraph reading → fluent paragraph/story reading."},
+      {group:"Group 3 – Approaching Grade Level", levelsCovered:"Level 5", mainGoal:"Strengthen fluent, meaningful grade-level reading", specificGoal:"Students will read grade-level stories with appropriate accuracy, fluency and comprehension, retell the main idea/events, and move toward independent grade-level reading."},
+      {group:"Group 4 – At/Above Grade Level", levelsCovered:"Level 6–7", mainGoal:"Maintain grade-level mastery and extend reading skills", specificGoal:"Students will consistently read grade-level or advanced texts with strong fluency and comprehension, use evidence from texts, infer meaning, and engage with increasingly complex literature."},
+    ]
+  };
+}
+
+// group key used on level rows ("Group 4 – At Grade Level" / "Group 4 – Above Grade Level") maps to the
+// single Group 4 record in the group table.
+function resolveGroupRecord(groups, readingGroupLabel){
+  if(!readingGroupLabel) return null;
+  let g = groups.find(g=>g.group===readingGroupLabel);
+  if(g) return g;
+  if(readingGroupLabel.indexOf("Group 4")===0) return groups.find(g=>g.group.indexOf("Group 4")===0);
+  if(readingGroupLabel.indexOf("Group 1")===0) return groups.find(g=>g.group.indexOf("Group 1")===0);
+  if(readingGroupLabel.indexOf("Group 2")===0) return groups.find(g=>g.group.indexOf("Group 2")===0);
+  if(readingGroupLabel.indexOf("Group 3")===0) return groups.find(g=>g.group.indexOf("Group 3")===0);
+  return null;
+}
+
+const SEED_STUDENTS = [{"grade": "Grade 1", "class": "", "name": "Aaisha", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Samarpreet singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Sehbaaj singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Ekam Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Bibek Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Gurjas kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Paras", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Nimrat Kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Aviraaj Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Gurleen Sharma", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Gurnoor Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Gurleen kaur", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Sehajdeep Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Manreet kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Veerpartap Singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Manreet kaur(Dakoha)", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Radhika", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Aarohi", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Deepkeerat Kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Sultan Singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Harrehmat kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Avreen kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 1", "class": "", "name": "Jai Karan", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Rehmatpreet Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Sukhmanpreet Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Gurbaaj Singh", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Gursahib Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Jasleen Kaur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Abhijot Singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Sahildeep Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Supreet Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Mansirat Kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Tejbir Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Nriti Sharma", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Jasmeet kaur", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Jyanti", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Gurkirat Kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Anureet Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Manreet Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Karanbir Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Anmolpreet Kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Abhiroop Kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Prabhnoor Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Fatehvir Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Japneet Kaur", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Mankirat Singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Chanvir Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 2", "class": "", "name": "Sehajpreet Kaur", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Sargun kaur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Arshdeep Singh", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Harnidh Singh", "baseline": "Level 7 – Above Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Gursaab Singh", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Neerajjit kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Sanmeet kaur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Amanpreet kaur", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Rameet kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Avneet kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Jasneet kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Lovepreet singh", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Sukhdeep singh", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Samarbir singh", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Mohammad Arhaan", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Neeraj Bhatti", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Gurpinder Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Gurkirat singh", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Namandeep kaur", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Sahibjot singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Agamnoorjeet", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Manraj singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Rajbir singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Vanshpreet singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 3", "class": "", "name": "Mankirat singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Ashish bhatti", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Jatinder Kumar", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Navreet kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Nimratpal singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Ekamjot singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Kirandeep kaur", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Rojveer singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Fatehbir singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Agamjot kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Gursimranjit singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Manreet kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Anujot kaur", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Anshpreet kaur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 4", "class": "", "name": "Sabheygun singh", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Sahibjit Singh", "baseline": "Level 6 – Grade Level", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Abaypreet Singh", "baseline": "Level 7 – Above Grade Level", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Navseerat Singh", "baseline": "Level 1 – Beginner", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Ekamdeep Singh", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Ravneet Kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Navrojdeep Kaur", "baseline": "Level 5 – Story", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Manreet Kaur", "baseline": "Level 7 – Above Grade Level", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Shubhleen Kaur", "baseline": "Level 3 – Sentence", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Sumarpreet Singh", "baseline": "Level 2 – Word", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Navjot Kaur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Anmol Thakur", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Manavdeep Singh", "baseline": "Level 4 – Paragraph", "endline": ""}, {"grade": "Grade 5", "class": "", "name": "Aagyapal Singh", "baseline": "Level 5 – Story", "endline": ""}];
+
+/* ============================= STATE ============================= */
+let STATE = {
+  students: [],   // {id, grade, class, name, baseline, endline, flagged, flagNote}
+  weekly: [],     // {id, studentId, week, currentLevel, progress, remark}
+  framework: null // {levels:[], groups:[]}
+};
+let editingStudentId = null;
+let editingWeeklyId = null;
+let selectedWeeklyStudentId = null;
+let dataReady = false;
+
+/* ============================= STORAGE / BACKEND ============================= */
+// Three possible backends, tried in this order:
+//  1. Google Sheets (via a Google Apps Script Web App URL configured in Settings) — shared, multi-user.
+//  2. window.storage — only exists while previewing inside Claude.ai.
+//  3. Browser localStorage — single-browser fallback, always available once hosted elsewhere.
+const BACKEND_URL_KEY = 'readingLadderBackendUrl';
+function getBackendUrl(){ try{ return localStorage.getItem(BACKEND_URL_KEY) || ''; }catch(e){ return ''; } }
+function setBackendUrl(url){ try{ localStorage.setItem(BACKEND_URL_KEY, url||''); }catch(e){} }
+let lastBackendError = '';
+
+async function loadState(){
+  let loaded = null;
+  const backendUrl = getBackendUrl();
+  if(backendUrl){
+    try{
+      const res = await fetch(backendUrl + (backendUrl.includes('?')?'&':'?') + 'action=load');
+      loaded = await res.json();
+      lastBackendError='';
+    }catch(e){ lastBackendError = String(e); console.error('Google Sheet load failed', e); }
+  }
+  if(!loaded && typeof window!=='undefined' && window.storage){
+    try{
+      const r = await window.storage.get('appState', false);
+      if(r) loaded = JSON.parse(r.value);
+    }catch(e){ /* no saved state yet, that's fine */ }
+  }
+  if(!loaded){
+    try{ const raw = localStorage.getItem('appState'); if(raw) loaded = JSON.parse(raw); }catch(e){}
+  }
+
+  STATE.students = (loaded && loaded.students) || null;
+  STATE.weekly = (loaded && loaded.weekly) || [];
+  STATE.framework = (loaded && loaded.framework) || null;
+
+  if(!STATE.framework){ STATE.framework = defaultFramework(); }
+  if(!STATE.students){
+    STATE.students = SEED_STUDENTS.map(s=>({
+      id: uid(),
+      grade: s.grade, name: s.name, baseline: s.baseline, endline: s.endline||"",
+      flagged: false, flagNote: ""
+    }));
+    showToast(STATE.students.length+" students loaded from your source sheet.");
+  }
+  await persist();
+  dataReady = true;
+}
+async function persist(){
+  const payload = JSON.stringify({students:STATE.students, weekly:STATE.weekly, framework:STATE.framework, savedAt:new Date().toISOString()});
+  const backendUrl = getBackendUrl();
+  if(backendUrl){
+    try{
+      await fetch(backendUrl, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: payload});
+      lastBackendError='';
+    }catch(e){ lastBackendError=String(e); console.error('Google Sheet save failed', e); showToast('⚠ Could not save to Google Sheet — check Settings.'); }
+  }
+  if(typeof window!=='undefined' && window.storage){
+    try{ await window.storage.set('appState', payload, false); }catch(e){ /* not running inside Claude.ai, ignore */ }
+  }
+  try{ localStorage.setItem('appState', payload); }catch(e){ console.error(e); }
+}
+async function saveStudents(){ await persist(); }
+async function saveWeekly(){ await persist(); }
+async function saveFramework(){ await persist(); }
+
+async function testBackendConnection(url){
+  try{
+    const res = await fetch(url + (url.includes('?')?'&':'?') + 'action=load');
+    if(!res.ok) return {ok:false, message:'Server responded with status '+res.status};
+    const data = await res.json();
+    return {ok:true, message:'Connected. '+(data && data.students ? data.students.length : 0)+' students found on the sheet.'};
+  }catch(e){ return {ok:false, message:String(e)}; }
+}
+
+function uid(){ return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9); }
+
+/* ============================= COMPUTE ENGINE ============================= */
+function levelNumber(levelName){
+  const idx = LEVEL_NAMES.indexOf(levelName);
+  return idx===-1 ? null : idx+1;
+}
+function levelRow(levelName){
+  return STATE.framework.levels.find(l=>l.level===levelName) || null;
+}
+function computeGroup(baseline){
+  const row = levelRow(baseline);
+  return row ? row.readingGroup : "";
+}
+function computePriority(baseline){
+  const row = levelRow(baseline);
+  return row ? row.priority : "";
+}
+function computeInterventionRequired(baseline){
+  const row = levelRow(baseline);
+  return row ? row.interventionRequired : "";
+}
+function computeGoal(baseline){
+  const row = levelRow(baseline);
+  if(!row) return "";
+  const grp = resolveGroupRecord(STATE.framework.groups, row.readingGroup);
+  return grp ? grp.specificGoal : "";
+}
+function computeTarget(baseline){
+  const row = levelRow(baseline);
+  return row && row.target ? row.target : null;
+}
+function computeCurrentLevel(studentId){
+  const recs = STATE.weekly.filter(w=>w.studentId===studentId && w.currentLevel);
+  if(!recs.length) return null;
+  recs.sort((a,b)=> parseInt(a.week.replace(/\D/g,''),10) - parseInt(b.week.replace(/\D/g,''),10));
+  return recs[recs.length-1];
+}
+function computeGrowth(baseline, endline){
+  if(!endline) return {display:"Pending", numeric:null};
+  const b = levelNumber(baseline), e = levelNumber(endline);
+  if(b===null || e===null) return {display:"Pending", numeric:null};
+  const g = e-b;
+  return {display: (g>0?"+":"")+g, numeric:g};
+}
+function computeGoalStatus(baseline, endline){
+  if(!endline) return "Pending Endline";
+  const b = levelNumber(baseline), e = levelNumber(endline);
+  const target = computeTarget(baseline) || b;
+  if(e>target) return "Goal Exceeded";
+  if(e===target) return "Goal Achieved";
+  if(e>b) return "Partially Achieved";
+  if(e===b) return "No Growth";
+  return "Declined";
+}
+function statusBadgeClass(status){
+  return {
+    "Goal Exceeded":"status-exceeded","Goal Achieved":"status-achieved","Partially Achieved":"status-partial",
+    "No Growth":"status-nogrowth","Declined":"status-declined","Pending Endline":"status-pending"
+  }[status] || "status-pending";
+}
+function priorityBadgeClass(p){
+  return {"High":"priority-high","Medium":"priority-medium","Low":"priority-low"}[p] || "priority-practice";
+}
+function levelDot(levelName){
+  const n = levelNumber(levelName);
+  return n ? `<span class="fw-level-dot" style="background:${LEVEL_COLORS[n]}"></span>` : "";
+}
+function levelBadge(levelName){
+  if(!levelName) return `<span class="muted">—</span>`;
+  const n = levelNumber(levelName);
+  const color = n ? LEVEL_COLORS[n] : "#999";
+  return `<span class="badge level" style="background:${color}">${escapeHtml(levelName.replace(/^Level \d+ – /,'L'+n+' — '))}</span>`;
+}
+function enrichStudent(s){
+  const group = computeGroup(s.baseline);
+  const goal = computeGoal(s.baseline);
+  const interventionRequired = computeInterventionRequired(s.baseline);
+  const priority = computePriority(s.baseline);
+  const cur = computeCurrentLevel(s.id);
+  const growth = computeGrowth(s.baseline, s.endline);
+  const goalStatus = computeGoalStatus(s.baseline, s.endline);
+  return {...s, group, goal, interventionRequired, priority, currentLevelRecord: cur,
+    currentLevel: cur ? cur.currentLevel : "", growth, goalStatus};
+}
+
+/* ============================= UTIL ============================= */
+function escapeHtml(str){
+  if(str===undefined || str===null) return "";
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function fillSelect(sel, options, placeholder){
+  sel.innerHTML = '';
+  if(placeholder){ const o=document.createElement('option'); o.value=''; o.textContent=placeholder; sel.appendChild(o); }
+  options.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+}
+
+/* ============================= NAVIGATION ============================= */
+function setView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('nav.mainnav button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='home') renderHome();
+  if(name==='students') renderStudents();
+  if(name==='weekly') renderWeekly();
+  if(name==='analysis') renderAnalysis();
+  if(name==='framework') renderFramework();
+}
+document.getElementById('btnHome').addEventListener('click', ()=>setView('home'));
+document.querySelectorAll('nav.mainnav button').forEach(b=>b.addEventListener('click', ()=>setView(b.dataset.view)));
+document.querySelectorAll('.nav-card').forEach(b=>b.addEventListener('click', ()=>setView(b.dataset.goto)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>closeModal(b.dataset.close)));
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click', (e)=>{ if(e.target===m) closeModal(m.id); }));
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+/* ============================= HOME ============================= */
+function renderHome(){
+  const banner = document.getElementById('backendBanner');
+  if(getBackendUrl()){
+    banner.style.display='none';
+  } else {
+    banner.style.display='block';
+    banner.innerHTML = `⚠ Saving to this browser only — other teachers/devices won't see this data yet. <button class="btn ghost small" id="bannerSettingsBtn" style="text-decoration:underline;">Connect a shared Google Sheet in Settings →</button>`;
+    document.getElementById('bannerSettingsBtn').addEventListener('click', ()=>document.getElementById('btnSettings').click());
+  }
+  const students = STATE.students.map(enrichStudent);
+  const total = students.length;
+  const intervention = students.filter(s=>s.interventionRequired==='YES').length;
+  const atAbove = students.filter(s=>{
+    const lvl = s.endline || s.currentLevel || s.baseline;
+    return levelNumber(lvl) >= 6;
+  }).length;
+  const withGrowth = students.filter(s=>s.growth.numeric!==null);
+  const avgGrowth = withGrowth.length ? (withGrowth.reduce((a,s)=>a+s.growth.numeric,0)/withGrowth.length) : 0;
+  const achieved = students.filter(s=>s.goalStatus==='Goal Achieved' || s.goalStatus==='Goal Exceeded').length;
+
+  const stats = [
+    {label:'Total students', num:total},
+    {label:'Intervention students', num:intervention},
+    {label:'At / above grade level', num:atAbove},
+    {label:'Average growth', num: withGrowth.length ? (avgGrowth>=0?'+':'')+avgGrowth.toFixed(1) : '—'},
+    {label:'Goals achieved', num:achieved},
+  ];
+  document.getElementById('homeStats').innerHTML = stats.map(s=>`
+    <div class="card stat-card"><div class="num">${s.num}</div><div class="label">${s.label}</div></div>
+  `).join('');
+}
+
+/* ============================= STUDENTS VIEW ============================= */
+let studentSort = {key:'grade', dir:'asc'};
+function renderStudentFilters(){
+  fillSelect(document.getElementById('filterGrade'), GRADES, 'All grades');
+  fillSelect(document.getElementById('filterGroup'), STATE.framework.levels.map(l=>l.readingGroup).filter((v,i,a)=>a.indexOf(v)===i), 'All groups');
+  fillSelect(document.getElementById('filterBaseline'), LEVEL_NAMES, 'All baseline levels');
+  const statuses = ["Goal Exceeded","Goal Achieved","Partially Achieved","No Growth","Declined","Pending Endline"];
+  fillSelect(document.getElementById('filterStatus'), statuses, 'All goal statuses');
+}
+function sortComparable(s, key){
+  switch(key){
+    case 'grade': return parseInt((s.grade.match(/\d+/)||[0])[0],10);
+    case 'name': return s.name.toLowerCase();
+    case 'baseline': return levelNumber(s.baseline) || 0;
+    case 'group': return s.group || '';
+    case 'currentLevel': return levelNumber(s.currentLevel) || 0;
+    case 'endline': return levelNumber(s.endline) || -1;
+    case 'growthNum': return s.growth.numeric===null ? -999 : s.growth.numeric;
+    case 'goalStatus': return s.goalStatus || '';
+    case 'interventionRequired': return s.interventionRequired || '';
+    default: return '';
+  }
+}
+function renderStudents(){
+  renderStudentFilters();
+  const search = document.getElementById('studentSearch').value.trim().toLowerCase();
+  const fg = document.getElementById('filterGrade').value;
+  const fgroup = document.getElementById('filterGroup').value;
+  const fbaseline = document.getElementById('filterBaseline').value;
+  const fstatus = document.getElementById('filterStatus').value;
+  const fintervention = document.getElementById('filterIntervention').value;
+
+  let rows = STATE.students.map(enrichStudent);
+  if(search) rows = rows.filter(s=>s.name.toLowerCase().includes(search));
+  if(fg) rows = rows.filter(s=>s.grade===fg);
+  if(fgroup) rows = rows.filter(s=>s.group===fgroup);
+  if(fbaseline) rows = rows.filter(s=>s.baseline===fbaseline);
+  if(fstatus) rows = rows.filter(s=>s.goalStatus===fstatus);
+  if(fintervention) rows = rows.filter(s=>s.interventionRequired===fintervention);
+
+  const dirMul = studentSort.dir==='asc' ? 1 : -1;
+  rows.sort((a,b)=>{
+    const av = sortComparable(a, studentSort.key), bv = sortComparable(b, studentSort.key);
+    if(av<bv) return -1*dirMul;
+    if(av>bv) return 1*dirMul;
+    return a.name.localeCompare(b.name);
+  });
+
+  document.querySelectorAll('#studentsTable th.sortable').forEach(th=>{
+    const arrow = th.querySelector('.arrow');
+    arrow.textContent = th.dataset.sort===studentSort.key ? (studentSort.dir==='asc'?'▲':'▼') : '';
+  });
+
+  document.getElementById('studentCountLabel').textContent = rows.length+' of '+STATE.students.length+' students';
+
+  const tbody = document.getElementById('studentsTbody');
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><h4>No students match</h4><p>Try clearing filters or search.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(s=>{
+    const growthClass = s.growth.numeric===null ? '' : (s.growth.numeric>0?'growth-pos':s.growth.numeric<0?'growth-neg':'growth-zero');
+    return `<tr data-id="${s.id}" class="${s.flagged?'flagged':''}">
+      <td>${escapeHtml(s.grade)}</td>
+      <td><strong>${escapeHtml(s.name)}</strong></td>
+      <td>${levelBadge(s.baseline)}</td>
+      <td><span class="badge group">${escapeHtml(s.group)}</span></td>
+      <td>${s.currentLevel ? levelBadge(s.currentLevel) : '<span class="muted">—</span>'}</td>
+      <td>${s.endline ? levelBadge(s.endline) : '<span class="muted">—</span>'}</td>
+      <td class="${growthClass}">${s.growth.display}</td>
+      <td><span class="badge ${statusBadgeClass(s.goalStatus)}">${s.goalStatus}</span></td>
+      <td><span class="badge ${priorityBadgeClass(s.priority)}">${s.interventionRequired}</span></td>
+      <td><button class="btn ghost small" data-edit="${s.id}">Edit</button></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+    tr.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-edit]')) return;
+      openProfile(tr.dataset.id);
+    });
+  });
+  tbody.querySelectorAll('[data-edit]').forEach(b=>{
+    b.addEventListener('click', (e)=>{ e.stopPropagation(); openStudentForm(b.dataset.edit); });
+  });
+}
+['studentSearch'].forEach(id=>document.getElementById(id).addEventListener('input', renderStudents));
+['filterGrade','filterGroup','filterBaseline','filterStatus','filterIntervention'].forEach(id=>document.getElementById(id).addEventListener('change', renderStudents));
+document.querySelectorAll('#studentsTable th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.sort;
+    if(studentSort.key===key){ studentSort.dir = studentSort.dir==='asc'?'desc':'asc'; }
+    else { studentSort = {key, dir:'asc'}; }
+    renderStudents();
+  });
+});
+
+function openStudentForm(id){
+  editingStudentId = id || null;
+  fillSelect(document.getElementById('sfGrade'), GRADES);
+  fillSelect(document.getElementById('sfBaseline'), LEVEL_NAMES, 'Select baseline level');
+  fillSelect(document.getElementById('sfEndline'), LEVEL_NAMES, 'Not yet assessed');
+  document.getElementById('btnDeleteStudent').style.display = id ? 'inline-flex' : 'none';
+  document.getElementById('studentFormHint').textContent = '';
+  if(id){
+    const s = STATE.students.find(x=>x.id===id);
+    document.getElementById('studentModalTitle').textContent = 'Edit student';
+    document.getElementById('sfGrade').value = s.grade;
+    document.getElementById('sfName').value = s.name;
+    document.getElementById('sfBaseline').value = s.baseline;
+    document.getElementById('sfEndline').value = s.endline || '';
+  } else {
+    document.getElementById('studentModalTitle').textContent = 'Add student';
+    document.getElementById('sfGrade').value = GRADES[0];
+    document.getElementById('sfName').value = '';
+    document.getElementById('sfBaseline').value = '';
+    document.getElementById('sfEndline').value = '';
+  }
+  openModal('modalStudent');
+}
+document.getElementById('btnAddStudent').addEventListener('click', ()=>openStudentForm(null));
+document.getElementById('btnSaveStudent').addEventListener('click', async ()=>{
+  const grade = document.getElementById('sfGrade').value;
+  const name = document.getElementById('sfName').value.trim();
+  const baseline = document.getElementById('sfBaseline').value;
+  const endline = document.getElementById('sfEndline').value;
+  if(!name){ document.getElementById('studentFormHint').textContent = 'Student name is required.'; return; }
+  if(!baseline){ document.getElementById('studentFormHint').textContent = 'Baseline reading level is required.'; return; }
+
+  if(editingStudentId){
+    const s = STATE.students.find(x=>x.id===editingStudentId);
+    s.grade=grade; s.name=name; s.baseline=baseline; s.endline=endline;
+  } else {
+    const dupe = STATE.students.some(x=> x.grade===grade && x.name.toLowerCase()===name.toLowerCase());
+    if(dupe){ document.getElementById('studentFormHint').textContent = 'A student with this Grade + Name already exists.'; return; }
+    STATE.students.push({id:uid(), grade, name, baseline, endline, flagged:false, flagNote:''});
+  }
+  await saveStudents();
+  closeModal('modalStudent');
+  renderStudents(); renderHome();
+  showToast('Student saved.');
+});
+document.getElementById('btnDeleteStudent').addEventListener('click', async ()=>{
+  if(!editingStudentId) return;
+  if(!confirm('Delete this student and all of their weekly progress records? This cannot be undone.')) return;
+  STATE.students = STATE.students.filter(s=>s.id!==editingStudentId);
+  STATE.weekly = STATE.weekly.filter(w=>w.studentId!==editingStudentId);
+  await saveStudents(); await saveWeekly();
+  closeModal('modalStudent');
+  renderStudents(); renderHome();
+  showToast('Student deleted.');
+});
+
+/* ---------- Student Profile ---------- */
+function openProfile(id){
+  const s = enrichStudent(STATE.students.find(x=>x.id===id));
+  document.getElementById('profileName').textContent = s.name;
+  document.getElementById('profileGrid').innerHTML = `
+    <div class="pf-item"><div class="k">Grade</div><div class="v">${escapeHtml(s.grade)}</div></div>
+    <div class="pf-item"><div class="k">Baseline</div><div class="v">${levelDot(s.baseline)}${escapeHtml(s.baseline)}</div></div>
+    <div class="pf-item"><div class="k">Reading group</div><div class="v">${escapeHtml(s.group)}</div></div>
+    <div class="pf-item"><div class="k">Current weekly level</div><div class="v">${s.currentLevel?escapeHtml(s.currentLevel):'—'}</div></div>
+    <div class="pf-item"><div class="k">Endline</div><div class="v">${s.endline?escapeHtml(s.endline):'Pending'}</div></div>
+    <div class="pf-item"><div class="k">Growth</div><div class="v">${s.growth.display}</div></div>
+    <div class="pf-item"><div class="k">Goal status</div><div class="v">${s.goalStatus}</div></div>
+    <div class="pf-item goal"><div class="k">Intervention goal (auto)</div><div class="v">${escapeHtml(s.goal)}</div></div>
+  `;
+  const hist = STATE.weekly.filter(w=>w.studentId===id).sort((a,b)=>parseInt(a.week.replace(/\D/g,''),10)-parseInt(b.week.replace(/\D/g,''),10));
+  const tbody = document.getElementById('profileWeeklyTbody');
+  tbody.innerHTML = hist.length ? hist.map(w=>`
+    <tr><td>${escapeHtml(w.week)}</td><td>${levelBadge(w.currentLevel)}</td><td>${escapeHtml(w.progress||'—')}</td><td>${escapeHtml(w.remark||'—')}</td></tr>
+  `).join('') : `<tr><td colspan="4"><div class="empty">No weekly records yet.</div></td></tr>`;
+  document.getElementById('btnEditFromProfile').onclick = ()=>{ closeModal('modalProfile'); openStudentForm(id); };
+  openModal('modalProfile');
+}
+
+/* ============================= IMPORT ============================= */
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  document.getElementById('importPasteArea').value='';
+  document.getElementById('importFileInput').value='';
+  document.getElementById('importFileName').textContent='';
+  document.getElementById('importPreviewWrap').style.display='none';
+  document.getElementById('btnConfirmImport').disabled = true;
+  window._importRows = null;
+  openModal('modalImport');
+});
+document.querySelectorAll('[data-imptab]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-imptab]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('imptab-paste').style.display = b.dataset.imptab==='paste' ? 'block':'none';
+    document.getElementById('imptab-file').style.display = b.dataset.imptab==='file' ? 'block':'none';
+  });
+});
+document.getElementById('importDropzone').addEventListener('click', ()=>document.getElementById('importFileInput').click());
+document.getElementById('importFileInput').addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  document.getElementById('importFileName').textContent = f ? ('Selected: '+f.name) : '';
+});
+
+function normalizeLevel(raw){
+  if(!raw) return {ok:false, value:raw};
+  const clean = raw.trim().replace(/\s*-\s*/g,' – ').replace(/\s+/g,' ');
+  let found = LEVEL_NAMES.find(l=>l.toLowerCase()===clean.toLowerCase());
+  if(found) return {ok:true, value:found};
+  const m = clean.match(/level\s*(\d)/i);
+  if(m){
+    const n = parseInt(m[1],10);
+    if(n>=1 && n<=7) return {ok:true, value:LEVEL_NAMES[n-1]};
+  }
+  return {ok:false, value:raw};
+}
+function normalizeGrade(raw){
+  if(!raw) return {ok:false, value:raw};
+  const clean = raw.trim();
+  let found = GRADES.find(g=>g.toLowerCase()===clean.toLowerCase());
+  if(found) return {ok:true, value:found};
+  const m = clean.match(/(\d+)/);
+  if(m){
+    const n = parseInt(m[1],10);
+    if(n>=1 && n<=10) return {ok:true, value:'Grade '+n};
+  }
+  return {ok:false, value:raw};
+}
+function parseDelimited(text){
+  return text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length)
+    .map(line=> line.includes('\t') ? line.split('\t') : line.split(','))
+    .map(cells=>cells.map(c=>c.trim().replace(/^"|"$/g,'')));
+}
+function buildPreviewRows(cells){
+  let rows = cells;
+  // skip header row if it looks like one
+  if(rows.length && /grade/i.test(rows[0][0]||'') ){ rows = rows.slice(1); }
+  return rows.filter(r=>r.length>=2 && (r[0]||r[1])).map(r=>{
+    const grade = r[0]||'', name = r[1]||'', baseline = r[2]||'';
+    const gRes = normalizeGrade(grade);
+    const lRes = normalizeLevel(baseline);
+    let status = 'ok', note='Ready to import';
+    if(!name.trim()){ status='error'; note='Missing student name'; }
+    else if(!gRes.ok){ status='error'; note='Unrecognised grade — expected "Grade 1"…"Grade 10"'; }
+    else if(baseline && !lRes.ok){ status='error'; note='Unrecognised baseline level — expected one of the 7 framework levels'; }
+    else if(!baseline){ status='warn'; note='Baseline missing — will be left blank and flagged'; }
+    const dupe = STATE.students.some(s=> s.grade===gRes.value && s.name.toLowerCase()===name.trim().toLowerCase());
+    if(status==='ok' && dupe){ status='dupe'; note='Already exists (Grade + Name) — will be skipped'; }
+    return {grade:gRes.ok?gRes.value:grade, name:name.trim(), baseline:lRes.ok?lRes.value:baseline, status, note};
+  });
+}
+document.getElementById('btnPreviewImport').addEventListener('click', ()=>{
+  const activeTab = document.querySelector('[data-imptab].active').dataset.imptab;
+  const finish = (text)=>{
+    const rows = buildPreviewRows(parseDelimited(text));
+    window._importRows = rows;
+    const ok = rows.filter(r=>r.status==='ok').length;
+    const warn = rows.filter(r=>r.status==='warn').length;
+    const err = rows.filter(r=>r.status==='error').length;
+    const dupe = rows.filter(r=>r.status==='dupe').length;
+    document.getElementById('importSummary').innerHTML = `
+      <div class="isum"><b>${rows.length}</b>rows found</div>
+      <div class="isum" style="color:#1F6B33"><b>${ok+warn}</b>will import</div>
+      <div class="isum" style="color:#B3402E"><b>${err}</b>flagged / skipped</div>
+      <div class="isum" style="color:var(--ink-soft)"><b>${dupe}</b>duplicates skipped</div>
+    `;
+    document.getElementById('importPreviewTbody').innerHTML = rows.map(r=>`
+      <tr class="${r.status==='error'?'flagged':''}">
+        <td>${escapeHtml(r.grade)}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.baseline)}</td>
+        <td>${r.status==='ok'?'<span class="badge status-achieved">Ready</span>':
+             r.status==='warn'?'<span class="badge status-partial">Flag: '+escapeHtml(r.note)+'</span>':
+             r.status==='dupe'?'<span class="badge status-nogrowth">Duplicate</span>':
+             '<span class="badge flag">'+escapeHtml(r.note)+'</span>'}</td>
+      </tr>`).join('');
+    document.getElementById('importPreviewWrap').style.display='block';
+    document.getElementById('btnConfirmImport').disabled = (ok+warn)===0;
+  };
+  if(activeTab==='paste'){
+    finish(document.getElementById('importPasteArea').value);
+  } else {
+    const f = document.getElementById('importFileInput').files[0];
+    if(!f){ showToast('Choose a file first.'); return; }
+    const reader = new FileReader();
+    reader.onload = (e)=>finish(e.target.result);
+    reader.readAsText(f);
+  }
+});
+document.getElementById('btnConfirmImport').addEventListener('click', async ()=>{
+  const rows = (window._importRows||[]).filter(r=>r.status==='ok'||r.status==='warn');
+  let count=0;
+  rows.forEach(r=>{
+    STATE.students.push({
+      id:uid(), grade:r.grade, name:r.name, baseline:r.status==='ok'?r.baseline:'', endline:'',
+      flagged: r.status==='warn', flagNote: r.status==='warn' ? 'Baseline missing' : ''
+    });
+    count++;
+  });
+  await saveStudents();
+  closeModal('modalImport');
+  renderStudents(); renderHome();
+  showToast(count+' student(s) imported.');
+});
+
+/* ============================= WEEKLY VIEW ============================= */
+const GROUP_MILESTONES = {
+  "Group 1 – Beginning / Emergent": [
+    {label:"Step 1: letter & sound recognition", level:LEVEL_NAMES[0]},
+    {label:"Step 2: blending & high-frequency words", level:LEVEL_NAMES[1]},
+    {label:"Goal met: reading simple sentences", level:LEVEL_NAMES[2]},
+  ],
+  "Group 2 – Developing": [
+    {label:"Step 1: sentence accuracy & fluency", level:LEVEL_NAMES[2]},
+    {label:"Step 2: short paragraph comprehension", level:LEVEL_NAMES[3]},
+    {label:"Goal met: fluent story reading", level:LEVEL_NAMES[4]},
+  ],
+  "Group 3 – Approaching Grade Level": [
+    {label:"Step 1: story fluency & comprehension", level:LEVEL_NAMES[4]},
+    {label:"Goal met: independent grade-level reading", level:LEVEL_NAMES[5]},
+  ],
+  "Group 4 – At Grade Level": [
+    {label:"Step 1: grade-level fluency & comprehension", level:LEVEL_NAMES[5]},
+    {label:"Goal met: extending into complex texts", level:LEVEL_NAMES[6]},
+  ],
+  "Group 4 – Above Grade Level": [
+    {label:"Step 1: maintaining advanced fluency", level:LEVEL_NAMES[6]},
+    {label:"Goal met: engaging with complex literature", level:LEVEL_NAMES[6]},
+  ],
+};
+function buildStatusOptionsHtml(baseline, currentValue){
+  const group = computeGroup(baseline);
+  const milestones = GROUP_MILESTONES[group] || [];
+  let html = `<option value="">— Not yet —</option>`;
+  if(milestones.length){
+    html += `<optgroup label="${escapeHtml(group)} — goal steps">`;
+    html += milestones.map(m=>`<option value="${escapeHtml(m.level)}" ${m.level===currentValue?'selected':''}>${escapeHtml(m.label)}</option>`).join('');
+    html += `</optgroup>`;
+  }
+  html += `<optgroup label="All reading levels">`;
+  html += LEVEL_NAMES.map(l=>`<option value="${escapeHtml(l)}" ${l===currentValue?'selected':''}>${escapeHtml(l)}</option>`).join('');
+  html += `</optgroup>`;
+  return html;
+}
+function renderWeekly(){
+  fillSelect(document.getElementById('weeklyGradeFilter'), GRADES, 'All grades');
+  fillSelect(document.getElementById('weeklyGroupFilter'), STATE.framework.levels.map(l=>l.readingGroup).filter((v,i,a)=>a.indexOf(v)===i), 'All groups');
+  document.getElementById('weeklyGradeFilter').onchange = renderWeekly;
+  document.getElementById('weeklyGroupFilter').onchange = renderWeekly;
+  const gradeFilter = document.getElementById('weeklyGradeFilter').value;
+  const groupFilter = document.getElementById('weeklyGroupFilter').value;
+  const search = document.getElementById('weeklySearch').value.trim().toLowerCase();
+
+  let students = STATE.students.map(enrichStudent);
+  if(search) students = students.filter(s=>s.name.toLowerCase().includes(search));
+  if(gradeFilter) students = students.filter(s=>s.grade===gradeFilter);
+  if(groupFilter) students = students.filter(s=>s.group===groupFilter);
+  students.sort((a,b)=> a.grade.localeCompare(b.grade,undefined,{numeric:true}) || a.name.localeCompare(b.name));
+
+  document.getElementById('weeklyCountLabel').textContent = students.length+' of '+STATE.students.length+' students';
+
+  const tbody = document.getElementById('weeklyTbody');
+  if(!students.length){
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><h4>No students match</h4><p>Try clearing filters or search.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = students.map(s=>{
+    const weekCells = WEEKS.map(w=>{
+      const rec = STATE.weekly.find(x=>x.studentId===s.id && x.week===w);
+      const val = rec ? rec.currentLevel : "";
+      const hasNote = rec && (rec.progress || rec.remark);
+      return `<td><div class="grid-cell">
+        <select class="weekly-grid-select ${val?'has-value':''}" data-student="${s.id}" data-week="${w}">${buildStatusOptionsHtml(s.baseline,val)}</select>
+        <button class="note-btn ${hasNote?'has-note':''}" data-student="${s.id}" data-week="${w}" title="${hasNote?'Edit note':'Add note'}">${hasNote?'📝':'➕'}</button>
+      </div></td>`;
+    }).join('');
+    return `<tr><td>${escapeHtml(s.grade)}</td><td><strong>${escapeHtml(s.name)}</strong></td>${weekCells}</tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.weekly-grid-select').forEach(sel=>sel.addEventListener('change', onWeeklyGridChange));
+  tbody.querySelectorAll('.note-btn').forEach(b=>b.addEventListener('click', ()=>openWeeklyForm(b.dataset.student, null, b.dataset.week)));
+}
+document.getElementById('weeklySearch').addEventListener('input', renderWeekly);
+
+async function onWeeklyGridChange(e){
+  const sel = e.target;
+  const studentId = sel.dataset.student;
+  const week = sel.dataset.week;
+  const value = sel.value;
+  let rec = STATE.weekly.find(w=>w.studentId===studentId && w.week===week);
+  if(!value){
+    if(rec && !rec.progress && !rec.remark){ STATE.weekly = STATE.weekly.filter(w=>w!==rec); }
+    else if(rec){ rec.currentLevel = ""; }
+  } else if(rec){
+    rec.currentLevel = value;
+  } else {
+    STATE.weekly.push({id:uid(), studentId, week, currentLevel:value, progress:'', remark:''});
+  }
+  await saveWeekly();
+  sel.classList.toggle('has-value', !!value);
+  renderHome();
+}
+
+function openWeeklyForm(studentId, weeklyId, presetWeek){
+  editingWeeklyId = weeklyId || null;
+  fillSelect(document.getElementById('wfWeek'), WEEKS);
+  fillSelect(document.getElementById('wfCurrentLevel'), LEVEL_NAMES, 'Select level');
+  document.getElementById('wfStudentSearch').value='';
+  document.getElementById('wfStudentSelect').style.display='none';
+  document.getElementById('wfContext').style.display='none';
+  document.getElementById('btnDeleteWeekly').style.display = weeklyId ? 'inline-flex' : 'none';
+  document.getElementById('weeklyFormHint').textContent='';
+
+  if(weeklyId){
+    const rec = STATE.weekly.find(w=>w.id===weeklyId);
+    document.getElementById('weeklyModalTitle').textContent = 'Edit weekly record';
+    selectStudentForWeekly(rec.studentId);
+    document.getElementById('wfWeek').value = rec.week;
+    document.getElementById('wfCurrentLevel').value = rec.currentLevel;
+    document.getElementById('wfProgress').value = rec.progress||'';
+    document.getElementById('wfRemark').value = rec.remark||'';
+  } else {
+    document.getElementById('weeklyModalTitle').textContent = 'Weekly progress note';
+    document.getElementById('wfWeek').value = presetWeek || WEEKS[0];
+    document.getElementById('wfProgress').value = '';
+    document.getElementById('wfRemark').value = '';
+    document.getElementById('wfCurrentLevel').value = '';
+    if(studentId) selectStudentForWeekly(studentId); else selectedWeeklyStudentId = null;
+    if(studentId){
+      const existing = STATE.weekly.find(w=>w.studentId===studentId && w.week===(presetWeek||WEEKS[0]));
+      if(existing){
+        editingWeeklyId = existing.id;
+        document.getElementById('wfCurrentLevel').value = existing.currentLevel;
+        document.getElementById('wfProgress').value = existing.progress||'';
+        document.getElementById('wfRemark').value = existing.remark||'';
+        document.getElementById('btnDeleteWeekly').style.display='inline-flex';
+      }
+    }
+  }
+  openModal('modalWeekly');
+}
+document.getElementById('btnAddWeekly').addEventListener('click', ()=>openWeeklyForm(null,null,null));
+
+function selectStudentForWeekly(id){
+  selectedWeeklyStudentId = id;
+  const s = enrichStudent(STATE.students.find(x=>x.id===id));
+  document.getElementById('wfStudentSearch').value = s.name+' — '+s.grade;
+  document.getElementById('wfStudentSelect').style.display='none';
+  document.getElementById('wfContext').style.display='block';
+  document.getElementById('wfContext').innerHTML = `
+    <strong>${escapeHtml(s.name)}</strong> · ${escapeHtml(s.grade)}<br>
+    Baseline: ${escapeHtml(s.baseline)} &nbsp;·&nbsp; Reading group: ${escapeHtml(s.group)}<br>
+    <span style="font-size:12px;">Intervention goal: ${escapeHtml(s.goal)}</span>
+  `;
+  checkExistingWeekly();
+}
+document.getElementById('wfStudentSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  const sel = document.getElementById('wfStudentSelect');
+  if(!q){ sel.style.display='none'; return; }
+  const matches = STATE.students.filter(s=>s.name.toLowerCase().includes(q)).slice(0,30);
+  sel.innerHTML = matches.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} — ${escapeHtml(s.grade)}</option>`).join('');
+  sel.style.display = matches.length ? 'block' : 'none';
+});
+document.getElementById('wfStudentSelect').addEventListener('change', (e)=>{
+  selectStudentForWeekly(e.target.value);
+});
+document.getElementById('wfWeek').addEventListener('change', checkExistingWeekly);
+function checkExistingWeekly(){
+  if(!selectedWeeklyStudentId) return;
+  const week = document.getElementById('wfWeek').value;
+  const existing = STATE.weekly.find(w=>w.studentId===selectedWeeklyStudentId && w.week===week);
+  const hint = document.getElementById('weeklyFormHint');
+  if(existing){
+    editingWeeklyId = existing.id;
+    document.getElementById('wfCurrentLevel').value = existing.currentLevel;
+    document.getElementById('wfProgress').value = existing.progress||'';
+    document.getElementById('wfRemark').value = existing.remark||'';
+    document.getElementById('btnDeleteWeekly').style.display='inline-flex';
+    hint.textContent = 'A record for this student and week already exists — you\'re editing it now, no duplicate will be created.';
+  } else {
+    editingWeeklyId = null;
+    document.getElementById('btnDeleteWeekly').style.display='none';
+    hint.textContent = '';
+  }
+}
+document.getElementById('btnSaveWeekly').addEventListener('click', async ()=>{
+  if(!selectedWeeklyStudentId){ document.getElementById('weeklyFormHint').textContent='Select a student first.'; return; }
+  const week = document.getElementById('wfWeek').value;
+  const currentLevel = document.getElementById('wfCurrentLevel').value;
+  if(!currentLevel){ document.getElementById('weeklyFormHint').textContent='Current reading level is required.'; return; }
+  const progress = document.getElementById('wfProgress').value.trim();
+  const remark = document.getElementById('wfRemark').value.trim();
+
+  let existing = editingWeeklyId ? STATE.weekly.find(w=>w.id===editingWeeklyId) : STATE.weekly.find(w=>w.studentId===selectedWeeklyStudentId && w.week===week);
+  if(existing){
+    existing.week=week; existing.currentLevel=currentLevel; existing.progress=progress; existing.remark=remark;
+  } else {
+    STATE.weekly.push({id:uid(), studentId:selectedWeeklyStudentId, week, currentLevel, progress, remark});
+  }
+  await saveWeekly();
+  closeModal('modalWeekly');
+  renderWeekly(); renderHome();
+  showToast('Weekly progress saved.');
+});
+document.getElementById('btnDeleteWeekly').addEventListener('click', async ()=>{
+  if(!editingWeeklyId) return;
+  STATE.weekly = STATE.weekly.filter(w=>w.id!==editingWeeklyId);
+  await saveWeekly();
+  closeModal('modalWeekly');
+  renderWeekly(); renderHome();
+  showToast('Weekly record deleted.');
+});
+
+/* ============================= ANALYSIS ============================= */
+function renderAnalysis(){
+  const students = STATE.students.map(enrichStudent);
+  const total = students.length;
+  const intervention = students.filter(s=>s.interventionRequired==='YES').length;
+  const levelCounts = {};
+  for(let i=1;i<=7;i++) levelCounts[i] = students.filter(s=>levelNumber(s.baseline)===i).length;
+  const atAbove = students.filter(s=>{ const lvl=s.endline||s.currentLevel||s.baseline; return levelNumber(lvl)>=6; }).length;
+  const improved = students.filter(s=>s.growth.numeric>0).length;
+  const achieved = students.filter(s=>s.goalStatus==='Goal Achieved').length;
+  const exceeded = students.filter(s=>s.goalStatus==='Goal Exceeded').length;
+  const noGrowth = students.filter(s=>s.goalStatus==='No Growth').length;
+  const declined = students.filter(s=>s.goalStatus==='Declined').length;
+  const pending = students.filter(s=>s.goalStatus==='Pending Endline').length;
+  const partial = students.filter(s=>s.goalStatus==='Partially Achieved').length;
+  const withGrowth = students.filter(s=>s.growth.numeric!==null);
+  const avgGrowth = withGrowth.length ? (withGrowth.reduce((a,s)=>a+s.growth.numeric,0)/withGrowth.length) : 0;
+
+  const stats = [
+    {label:'Total students', num:total},
+    {label:'Intervention students', num:intervention},
+    {label:'At / above grade level', num:atAbove},
+    {label:'Students improved', num:improved},
+    {label:'Goals achieved', num:achieved},
+    {label:'Goals exceeded', num:exceeded},
+    {label:'No growth', num:noGrowth},
+    {label:'Declined', num:declined},
+    {label:'Average growth', num: withGrowth.length ? (avgGrowth>=0?'+':'')+avgGrowth.toFixed(2) : '—'},
+  ];
+  document.getElementById('analysisStats').innerHTML = stats.map(s=>`
+    <div class="card stat-card"><div class="num">${s.num}</div><div class="label">${s.label}</div></div>
+  `).join('');
+
+  // level distribution chart
+  const maxLevel = Math.max(1, ...Object.values(levelCounts));
+  document.getElementById('levelChart').innerHTML = LEVEL_NAMES.map((name,i)=>{
+    const n=i+1, c=levelCounts[n];
+    const pct = Math.round((c/maxLevel)*100);
+    return `<div class="bar-row"><div class="lbl">${escapeHtml(name)}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${LEVEL_COLORS[n]}"></div></div><div class="val">${c}</div></div>`;
+  }).join('');
+
+  // goal status chart
+  const statusData = [
+    ['Goal Exceeded', exceeded, '#3D8F6E'], ['Goal Achieved', achieved, '#2A6F63'],
+    ['Partially Achieved', partial, '#C97A3B'], ['No Growth', noGrowth, '#9A9585'],
+    ['Declined', declined, '#B3402E'], ['Pending Endline', pending, '#C9C2AE']
+  ];
+  const maxStatus = Math.max(1, ...statusData.map(d=>d[1]));
+  document.getElementById('statusChart').innerHTML = statusData.map(([label,c,color])=>{
+    const pct = Math.round((c/maxStatus)*100);
+    return `<div class="bar-row"><div class="lbl">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="val">${c}</div></div>`;
+  }).join('');
+
+  // grade-wise table
+  const tbody = document.getElementById('gradeAnalysisTbody');
+  tbody.innerHTML = GRADES.map(g=>{
+    const gs = students.filter(s=>s.grade===g);
+    const t = gs.length;
+    const lc = {}; for(let i=1;i<=7;i++) lc[i]=gs.filter(s=>levelNumber(s.baseline)===i).length;
+    const interv = gs.filter(s=>s.interventionRequired==='YES').length;
+    const imp = gs.filter(s=>s.growth.numeric>0).length;
+    const ach = gs.filter(s=>s.goalStatus==='Goal Achieved'||s.goalStatus==='Goal Exceeded').length;
+    const wg = gs.filter(s=>s.growth.numeric!==null);
+    const avg = wg.length ? (wg.reduce((a,s)=>a+s.growth.numeric,0)/wg.length) : null;
+    return `<tr>
+      <td><strong>${g}</strong></td><td>${t}</td>
+      <td>${lc[1]}</td><td>${lc[2]}</td><td>${lc[3]}</td><td>${lc[4]}</td><td>${lc[5]}</td><td>${lc[6]}</td><td>${lc[7]}</td>
+      <td>${interv}</td><td>${imp}</td><td>${ach}</td><td>${avg===null?'—':(avg>=0?'+':'')+avg.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================= FRAMEWORK VIEW ============================= */
+const GROUP_OPTIONS = ["Group 1 – Beginning / Emergent","Group 2 – Developing","Group 3 – Approaching Grade Level","Group 4 – At Grade Level","Group 4 – Above Grade Level"];
+const PRIORITY_OPTIONS = ["High","Medium","Low","Practice","Practice Literature"];
+const YESNO_OPTIONS = ["YES","NO"];
+
+function renderFramework(){
+  const tbody = document.getElementById('frameworkLevelsTbody');
+  tbody.innerHTML = STATE.framework.levels.map((row,idx)=>`
+    <tr data-idx="${idx}">
+      <td class="muted">${row.sortOrder}</td>
+      <td>${levelDot(row.level)}<strong style="font-size:12.5px;">${escapeHtml(row.level)}</strong></td>
+      <td><textarea class="editcell" data-field="readingAbility">${escapeHtml(row.readingAbility)}</textarea></td>
+      <td><textarea class="editcell" data-field="studentCanDo">${escapeHtml(row.studentCanDo)}</textarea></td>
+      <td><select class="editcell" data-field="readingGroup">${GROUP_OPTIONS.map(g=>`<option ${g===row.readingGroup?'selected':''}>${g}</option>`).join('')}</select></td>
+      <td><select class="editcell" data-field="priority">${PRIORITY_OPTIONS.map(p=>`<option ${p===row.priority?'selected':''}>${p}</option>`).join('')}</select></td>
+      <td><select class="editcell" data-field="interventionRequired">${YESNO_OPTIONS.map(y=>`<option ${y===row.interventionRequired?'selected':''}>${y}</option>`).join('')}</select></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-field]').forEach(el=>{
+    el.addEventListener('change', onFrameworkLevelEdit);
+    if(el.tagName==='TEXTAREA') el.addEventListener('blur', onFrameworkLevelEdit);
+  });
+
+  const gtbody = document.getElementById('frameworkGroupsTbody');
+  gtbody.innerHTML = STATE.framework.groups.map((row,idx)=>`
+    <tr data-gidx="${idx}">
+      <td><strong style="font-size:12.5px;">${escapeHtml(row.group)}</strong></td>
+      <td class="muted">${escapeHtml(row.levelsCovered)}</td>
+      <td><textarea class="editcell" data-gfield="mainGoal">${escapeHtml(row.mainGoal)}</textarea></td>
+      <td><textarea class="editcell" data-gfield="specificGoal">${escapeHtml(row.specificGoal)}</textarea></td>
+    </tr>
+  `).join('');
+  gtbody.querySelectorAll('[data-gfield]').forEach(el=>el.addEventListener('blur', onFrameworkGroupEdit));
+}
+async function onFrameworkLevelEdit(e){
+  const tr = e.target.closest('tr');
+  const idx = parseInt(tr.dataset.idx,10);
+  const field = e.target.dataset.field;
+  STATE.framework.levels[idx][field] = e.target.value;
+  await saveFramework();
+  showToast('Framework updated — all records recalculated.');
+}
+async function onFrameworkGroupEdit(e){
+  const tr = e.target.closest('tr');
+  const idx = parseInt(tr.dataset.gidx,10);
+  const field = e.target.dataset.gfield;
+  STATE.framework.groups[idx][field] = e.target.value;
+  await saveFramework();
+  showToast('Framework updated — all records recalculated.');
+}
+document.getElementById('btnResetFramework').addEventListener('click', async ()=>{
+  if(!confirm('Reset the Reading Level Framework to its default values? Custom edits will be lost.')) return;
+  STATE.framework = defaultFramework();
+  await saveFramework();
+  renderFramework();
+  renderStudents();
+  showToast('Framework reset to defaults.');
+});
+
+/* ============================= INIT ============================= */
+document.getElementById('btnSettings').addEventListener('click', ()=>{
+  document.getElementById('settingsBackendUrl').value = getBackendUrl();
+  document.getElementById('settingsStatus').textContent = getBackendUrl()
+    ? 'Currently connected to a Google Sheet backend.'
+    : 'Currently saving to this browser only — not shared with other users.';
+  openModal('modalSettings');
+});
+document.getElementById('btnTestBackend').addEventListener('click', async ()=>{
+  const url = document.getElementById('settingsBackendUrl').value.trim();
+  const status = document.getElementById('settingsStatus');
+  if(!url){ status.textContent = 'Paste your Web App URL first.'; return; }
+  status.textContent = 'Testing…';
+  const result = await testBackendConnection(url);
+  status.textContent = (result.ok ? '✅ ' : '❌ ') + result.message;
+});
+document.getElementById('btnSaveBackend').addEventListener('click', async ()=>{
+  const url = document.getElementById('settingsBackendUrl').value.trim();
+  setBackendUrl(url);
+  showToast(url ? 'Google Sheet backend saved — reloading…' : 'Backend cleared — reloading…');
+  setTimeout(()=>window.location.reload(), 700);
+});
+document.getElementById('btnClearBackend').addEventListener('click', ()=>{
+  document.getElementById('settingsBackendUrl').value='';
+  setBackendUrl('');
+  showToast('Backend cleared — reloading…');
+  setTimeout(()=>window.location.reload(), 700);
+});
+
+async function init(){
+  await loadState();
+  setView('home');
+}
+init();
+
+})();
+</script>
+</body>
+</html>
